@@ -46,7 +46,7 @@
                             <img src="{{ asset('icons/user.png') }}" width="30px" height="30px">
                         </button>
                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            <a class="dropdown-item" href="#">
+                            <a class="dropdown-item" href="{{ route('profile') }}">
                                 <img src="{{ asset('icons/usuario.svg') }}" width="20px" height="20px">
                                 Profile
                             </a>

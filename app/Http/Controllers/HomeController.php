@@ -42,6 +42,13 @@ class HomeController extends Controller
         ]);
     }
 
+    public function profile() {
+        $user = User::find(Auth::user()->id);
+        return view('profile')->with([
+            'user' => $user
+        ]);
+    }
+
     public function addCategory(Request $r) {
         $category = new Category;
         $category->user_id = $r->user_id;
@@ -53,8 +60,19 @@ class HomeController extends Controller
 
     public function deleteCategory(Request $r) {
         $category = Category::find($r->id);
-        $category->delete();
 
+        foreach($category->tasklists()->get() as $list) {
+            foreach($list->tasks()->get() as $task) {
+                $task->delete();
+            }
+            $list->delete();
+        }
+
+        foreach($category->notes()->get() as $note) {
+            $note->delete();
+        }
+
+        $category->delete();
         return redirect(route('home'));
     }
 
@@ -119,5 +137,20 @@ class HomeController extends Controller
         $task = Task::find($r->id);
         $task->checked = true;
         $task->save();
+    }
+
+    public function editUser(Request $r) {
+        $user = User::find($r->user_id);
+        $password = Auth::user()->password;
+       
+        if(password_verify($r->password, $password)) {
+            $user->name = $r->name;
+            if($r->new_password) {
+                $user->password = password_hash($r->new_password, PASSWORD_DEFAULT);
+            }
+            $user->save();
+        }
+
+        return redirect(route('profile'));
     }
 }

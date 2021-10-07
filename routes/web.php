@@ -25,6 +25,7 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/profile', [App\Http\Controllers\HomeController::class, 'profile'])->name('profile');
 
 Route::post('/addCategory', [App\Http\Controllers\HomeController::class, 'addCategory'])->name('add_category');
 Route::post('/deleteCategory', [App\Http\Controllers\HomeController::class, 'deleteCategory'])->name('delete_category');
@@ -37,4 +38,6 @@ Route::post('/editteNote', [App\Http\Controllers\HomeController::class, 'editNot
 Route::post('/addTasklist', [App\Http\Controllers\HomeController::class, 'addTasklist'])->name('add_tasklist');
 Route::post('/deleteTasklist', [App\Http\Controllers\HomeController::class, 'deleteTasklist'])->name('delete_tasklist');
 Route::post('/editTasklist', [App\Http\Controllers\HomeController::class, 'editTasklist'])->name('edit_tasklist');
+
+Route::post('/editUser', [App\Http\Controllers\HomeController::class, 'editUser'])->name('edit_user');
 

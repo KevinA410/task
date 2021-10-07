@@ -35,7 +35,7 @@
       <form id="form_category" action="{{ route('add_category') }}" method="POST" class="d-none">
         @csrf
         <input type="text" name="user_id" value="{{ $user_id }}">
-        <input type="text" name="name" id="form_name">
+        <input type="text" name="name" id="form_name" required>
       </form>
 
       <input type="text" class="col-9 form-control ml-2" placeholder="Add" id="input_name">
@@ -49,7 +49,7 @@
     <div class="card ml-2">
       <ul class="list-group list-group-flush">
         @foreach($categories as $category)
-        <li class="list-group-item">
+        <li class="list-group-item" id="category{{ $category->id }}">
           <form action="{{ route('delete_category') }}" method="POST">
             <input type="text" name="id" value="{{ $category->id }}" hidden>
             @csrf
@@ -57,7 +57,7 @@
               x
             </button>
             {{ $category->name }}&nbsp;
-            <!--<span class="badge badge-pill badge-primary">0</span>-->
+            <span class="badge badge-pill badge-primary">{{ count($category->notes()->get()) }}, {{ count($category->tasklists()->get()) }}</span>
           </form>
         </li>
         @endforeach
@@ -81,11 +81,11 @@
               @csrf
               <input type="text" name="user_id" value="{{ $user_id }}" hidden>
               <div class="card-header bg-primary">
-                <input id="note_title" type="text" placeholder="Title" class="form-control" name="title">
+                <input id="note_title" type="text" placeholder="Title" class="form-control" name="title" required>
               </div>
               <div class="card-body">
                 <!-- Select category -->
-                <select id="note_category" name="category" class="form-control">
+                <select id="note_category" name="category" class="form-control" required>
                   <option selected value="" disabled>Select category</option>
                   @foreach($categories as $category)
                   <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -93,7 +93,7 @@
                 </select>
 
                 <p class="card-text mt-3">
-                  <textarea id="note_area" placeholder="Write here..." name="description" class="form-control"></textarea>
+                  <textarea id="note_area" placeholder="Write here..." name="description" class="form-control" required></textarea>
                 </p>
                 <div class="text-right">
                   <button id="clear_note_form" class="btn btn-secondary">
@@ -114,11 +114,14 @@
               @csrf
               <div class="card-header">
                 <input type="text" name="id" value="{{ $note->id }}" hidden>
-                <input id="title{{ $note->id }}" type="text" name="title" value="{{ $note->title }}" class="h5 form-control" readonly>
+                <input id="title{{ $note->id }}" type="text" name="title" value="{{ $note->title }}" class="h5 form-control" required readonly>
               </div>
               <div class="card-body">
                 <p class="card-text text-justify">
-                  <textarea id="description{{ $note->id }}" name="description" class="form-control" readonly>{{$note->description}}</textarea>
+                  <strong>Category:&nbsp;</strong>{{ App\Models\Category::find($note->category_id)->name }}
+                </p>
+                <p class="card-text text-justify">
+                  <textarea id="description{{ $note->id }}" name="description" class="form-control" required readonly>{{$note->description}}</textarea>
                 </p>
                 <div class="text-right">
                   <button id="btn_delete{{ $note->id }}" class="btn btn-danger">
@@ -165,7 +168,6 @@
 
                     $("#btn_save{{ $note->id }}").click(function(e) {
                       $("#form{{ $note->id }}").attr("action", "{{ route('edit_note') }}");
-                      $("#form{{ $note->id }}").submit();
                     });
                   </script>
                 </div>
@@ -186,11 +188,11 @@
               <input type="text" name="user_id" value="{{ $user_id }}" hidden>
               <input type="text" id="tasks_counter" name="counter" value="1" hidden>
               <div class="card-header bg-primary">
-                <input name="name" id="tasklist_title" type="text" placeholder="List title" class="form-control">
+                <input name="name" id="tasklist_title" type="text" placeholder="List title" class="form-control" required>
               </div>
               <div class="card-body">
                 <!-- Select category -->
-                <select id="tasklist_category" name="category" class="form-control">
+                <select id="tasklist_category" name="category" class="form-control" required>
                   <option selected value="" disabled>Select category</option>
                   @foreach($categories as $category)
                   <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -203,7 +205,7 @@
                         <input id="task_rd1" name="task_rd1" type="radio" aria-label="Radio button for following text input" disabled>
                       </div>
                     </div>
-                    <input id="task_txt1" name="task_txt1" type="text" placeholder="Write a task" class="form-control" aria-label="Text input with radio button">
+                    <input required id="task_txt1" name="task_txt1" type="text" placeholder="Write a task" class="form-control" aria-label="Text input with radio button">
                   </div>
                 </div>
 
@@ -240,7 +242,7 @@
                               <input disabled name="task_rd${tasks}" type="radio" aria-label="Radio button for following text input">
                             </div>
                           </div>
-                          <input name="task_txt${tasks}" type="text" placeholder="Write a task" class="form-control" aria-label="Text input with radio button">
+                          <input required name="task_txt${tasks}" type="text" placeholder="Write a task" class="form-control" aria-label="Text input with radio button">
                         </div>
                       `);
                     });
@@ -269,7 +271,10 @@
                 <h5 class="card-title">{{ $tasklist->name }}</h5>
               </div>
               <div class="card-body">
-              @foreach($tasklist->tasks()->get() as $task)
+                <p class="card-text text-justify">
+                  <strong>Category:&nbsp;</strong>{{ App\Models\Category::find($note->category_id)->name }}
+                </p>
+                @foreach($tasklist->tasks()->get() as $task)
                 <div class="input-group mb-2">
                   <div class="input-group-prepend">
                     <div class="input-group-text">
@@ -283,19 +288,18 @@
                           $.ajax({
                             url: "{{ route('edit_tasklist') }}",
                             data: {
-                              "_token": $("meta[name='csrf-token']").attr("content"),  
+                              "_token": $("meta[name='csrf-token']").attr("content"),
                               id: "{{ $task->id }}"
                             },
                             type: "POST",
-                            success: function() {
-                            }
+                            success: function() {}
                           });
                         });
                       </script>
                       @endif
                     </div>
                   </div>
-                  <input type="text" placeholder="Add dark mode" class="form-control" value="{{ $task->name }}">
+                  <input type="text" placeholder="Add dark mode" class="form-control" value="{{ $task->name }}" readonly>
                 </div>
                 @endforeach
 
@@ -307,27 +311,18 @@
                 <script>
                   $("#delete_tasklist").click(function(e) {
                     $("#form_tasklist{{ $tasklist->id }}").attr("action", " {{ route('delete_tasklist') }}");
-                    $("#form_tasklist{{ $tasklist->id }}").submit();
-                  })
+                  });
                 </script>
               </div>
           </div>
+          @endforeach
         </div>
-        @endforeach
       </div>
     </div>
   </div>
 
 
 </div>
-<!-- /#page-content-wrapper -->
-
-</div>
-<!-- /#wrapper -->
-
-<!-- Bootstrap core JavaScript -->
-<script src="vendor/jquery/jquery.min.js"></script>
-<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
 <!-- Menu Toggle Script -->
 <script>
@@ -338,7 +333,12 @@
 
   $("#btn_add_category").click(function(e) {
     $("#form_name").val($("#input_name").val());
-    $("#form_category").submit();
+    if ($("#form_name").val().trim().length > 0) {
+      $("#form_category").submit();
+    } else {
+      alert("Category name is required");
+    }
+    $("#input_name").val("");
   });
 
   $("#clear_note_form").click(function(e) {
